@@ -58,19 +58,16 @@ const CybercoreBackground = ({ beamCount = 60 }) => {
 };
 
 
+
+
 // --- WALLET MODAL ---
 function WalletModal({ isOpen, onClose, onConnect }) {
   const [connectingTo, setConnectingTo] = useState(null);
-
-  if (!isOpen) { 
-    if (connectingTo) setConnectingTo(null); return null; 
-  }
-
+  if (!isOpen) { if (connectingTo) setConnectingTo(null); return null; }
   const handleProviderClick = (name, address) => {
     setConnectingTo(name);
     setTimeout(() => { onConnect(name, address); setConnectingTo(null); }, 1800);
   };
-
   return (
     <div className="modal-overlay flex-center fade-in">
       <div className="glass-panel modal-content fade-in-up text-center">
@@ -84,14 +81,8 @@ function WalletModal({ isOpen, onClose, onConnect }) {
           <div className="fade-in">
             <h2 className="mb-6 text-gradient text-3xl">Connect Wallet</h2>
             <div className="wallet-options">
-              <button className="btn btn-wallet" onClick={() => handleProviderClick("Phantom", "0xPhan...tom89A")}>
-                <img src="https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Solana_logo.png/120px-Solana_logo.png" alt="Phantom" className="wallet-icon" style={{filter: "grayscale(1) brightness(2)"}} />
-                Phantom Mode
-              </button>
-              <button className="btn btn-wallet" onClick={() => handleProviderClick("Solflare", "0xSolf...lare2B")}>
-                <img src="https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Solana_logo.png/120px-Solana_logo.png" alt="Solflare" className="wallet-icon" style={{filter: "grayscale(1) brightness(2)"}} />
-                Solflare Mode
-              </button>
+              <button className="btn btn-wallet" onClick={() => handleProviderClick("Phantom", "0xPhan...tom89A")}><img src="https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Solana_logo.png/120px-Solana_logo.png" alt="Phantom" className="wallet-icon" style={{filter: "grayscale(1) brightness(2)"}} />Phantom Mode</button>
+              <button className="btn btn-wallet" onClick={() => handleProviderClick("Solflare", "0xSolf...lare2B")}><img src="https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Solana_logo.png/120px-Solana_logo.png" alt="Solflare" className="wallet-icon" style={{filter: "grayscale(1) brightness(2)"}} />Solflare Mode</button>
             </div>
             <button className="btn-secondary mt-6 w-100 py-4" onClick={onClose}>Cancel</button>
           </div>
@@ -547,8 +538,10 @@ function ClansTab({ wallet, winStreak, hasJoinedClan, onJoin }) {
     </div>
   );
   if (!wallet) return (
-     <div className="container section text-center fade-in" style={{ paddingTop: '100px' }}><Users size={80} className="mx-auto mb-6 text-muted" /><h2 className="text-4xl mb-4">Connect to join a Clan.</h2><p className="text-muted text-xl mb-6">Link your mock wallet to view the Social Wars.</p></div>
+     <div className="container section text-center fade-in" style={{ paddingTop: '100px' }}><Users size={80} className="mx-auto mb-6 text-muted" /><h2 className="text-4xl mb-4">Connect to join a Clan.</h2><p className="text-muted text-xl mb-6">Link your Solana wallet to view the Social Wars.</p></div>
   );
+
+  const addressString = wallet?.address || "";
 
   return (
     <div className="container section fade-in-up">
@@ -575,7 +568,7 @@ function ClansTab({ wallet, winStreak, hasJoinedClan, onJoin }) {
               <ul className="clan-list font-mono text-sm">
                  <li className="clan-item"><span>0xDegen...12A</span> <span style={{color: '#ef4444', fontWeight: 'bold'}}>0 Streak</span></li>
                  <li className="clan-item" style={{background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)'}}>
-                    <span className="font-bold tracking-wider text-primary">{wallet.address.substring(0,8)} (YOU)</span> 
+                    <span className="font-bold tracking-wider text-primary">{addressString.substring(0,8)} (YOU)</span> 
                     {winStreak === 0 ? <span style={{color: '#ef4444', fontWeight: 'bold'}}>0 Streak</span> : <span className="text-primary fire-streak font-bold">🔥 {winStreak} Streak</span>}
                  </li>
               </ul>
@@ -621,9 +614,10 @@ const MOCK_LEADERBOARD = [
 ];
 
 function LeaderboardTab({ wallet, totalXp }) {
+  const addressString = wallet?.address || "";
   const playerEntry = {
      isPlayer: true,
-     address: wallet ? `${wallet.address.substring(0,8)}... (YOU)` : 'Guest Player (YOU)',
+     address: wallet ? `${addressString.substring(0,8)}... (YOU)` : 'Guest Player (YOU)',
      xp: totalXp,
      clan: 'Solana Degens'
   };
@@ -668,8 +662,10 @@ function LeaderboardTab({ wallet, totalXp }) {
 // --- PLAYER PROFILE TAB ---
 function ProfileTab({ wallet, winStreak, totalSkr, totalXp, quizWins, battleWins }) {
   if (!wallet) return (
-     <div className="container section text-center fade-in" style={{ paddingTop: '100px' }}><User size={80} className="mx-auto mb-6 text-muted" /><h2 className="text-4xl mb-4">Connect Wallet</h2><p className="text-muted text-xl mb-6">Link your mock wallet to view your player statistics.</p></div>
+     <div className="container section text-center fade-in" style={{ paddingTop: '100px' }}><User size={80} className="mx-auto mb-6 text-muted" /><h2 className="text-4xl mb-4">Connect Wallet</h2><p className="text-muted text-xl mb-6">Link your Solana wallet to view your player statistics.</p></div>
   );
+
+  const addressString = wallet?.address || "";
 
   return (
     <div className="container section fade-in-up">
@@ -679,8 +675,8 @@ function ProfileTab({ wallet, winStreak, totalSkr, totalXp, quizWins, battleWins
             <div className="animate-pulse-glow mb-4" style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                <User size={40} color="#020617" />
             </div>
-            <h2 className="text-2xl font-mono text-primary">{wallet.address}</h2>
-            <p className="text-muted text-sm mt-2">Active Web3 Player</p>
+            <h2 className="text-2xl font-mono text-primary" style={{wordBreak:'break-all'}}>{addressString}</h2>
+            <p className="text-muted text-sm mt-2">Active Solana Player</p>
          </div>
 
          <div className="grid-2 gap-4 mb-6">
@@ -756,8 +752,6 @@ function App() {
     <div>
       <CybercoreBackground beamCount={50} />
 
-      <WalletModal isOpen={walletModalOpen} onClose={() => setWalletModalOpen(false)} onConnect={handleConnect} />
-
       <nav className="container flex-between" style={{ padding: '24px 20px', borderBottom: '1px solid var(--glass-border)', background: 'rgba(11, 14, 20, 0.8)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 100 }}>
         <div className="flex-center cursor-pointer" style={{ gap: '16px' }}>
           <Gamepad2 size={32} color="var(--primary)" className="animate-pulse-glow" style={{ borderRadius: '50%' }} />
@@ -796,7 +790,7 @@ function App() {
       </nav>
 
       <style>{`@media (max-width: 768px) { .hide-mobile { display: none !important; } }`}</style>
-
+      
       <div style={{ minHeight: 'calc(100vh - 90px)', position: 'relative', zIndex: 10 }}>
         {activeTab === 'battle' && <ClashArena onMatchEnd={handleMatchEnd} wallet={wallet} totalSkr={totalSkr} requestConnect={() => setWalletModalOpen(true)} />}
         {activeTab === 'quiz' && <QuizGame onMatchEnd={handleMatchEnd} wallet={wallet} totalSkr={totalSkr} requestConnect={() => setWalletModalOpen(true)} />}
@@ -804,6 +798,8 @@ function App() {
         {activeTab === 'leaderboard' && <LeaderboardTab wallet={wallet} totalXp={totalXp} />}
         {activeTab === 'profile' && <ProfileTab wallet={wallet} winStreak={winStreak} totalSkr={totalSkr} totalXp={totalXp} quizWins={quizWins} battleWins={battleWins} />}
       </div>
+      
+      <WalletModal isOpen={walletModalOpen} onClose={() => setWalletModalOpen(false)} onConnect={handleConnect} />
     </div>
   );
 }
