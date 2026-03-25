@@ -166,7 +166,7 @@ function ClashArena({ onMatchEnd, wallet, totalSkr, requestConnect }) {
         xpReward *= 3; 
         skrReward = isWin ? 30 : (winState === 'draw' ? 10 : 0); // 30 yield covers the 10 cost for a net 20
       }
-      onMatchEnd(xpReward, skrReward, matchType, isWin); 
+      onMatchEnd(xpReward, skrReward, matchType, isWin, 'arena'); 
     }, 2500);
   }, [onMatchEnd, matchType]);
 
@@ -315,7 +315,7 @@ function QuizGame({ onMatchEnd, wallet, requestConnect, totalSkr }) {
          xpReward *= 3;
          if (score >= 250) skrReward = 30; else if (score >= 150) skrReward = 15; else skrReward = 0;
        }
-       onMatchEnd(xpReward, skrReward, matchType, isWin);
+       onMatchEnd(xpReward, skrReward, matchType, isWin, 'quiz');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState]);
@@ -665,21 +665,78 @@ function LeaderboardTab({ wallet, totalXp }) {
   )
 }
 
+// --- PLAYER PROFILE TAB ---
+function ProfileTab({ wallet, winStreak, totalSkr, totalXp, quizWins, battleWins }) {
+  if (!wallet) return (
+     <div className="container section text-center fade-in" style={{ paddingTop: '100px' }}><User size={80} className="mx-auto mb-6 text-muted" /><h2 className="text-4xl mb-4">Connect Wallet</h2><p className="text-muted text-xl mb-6">Link your mock wallet to view your player statistics.</p></div>
+  );
+
+  return (
+    <div className="container section fade-in-up">
+      <h1 className="text-4xl mb-8 text-center text-gradient uppercase font-bold tracking-wider">Player Profile</h1>
+      <div className="glass-panel p-8 max-w-lg mx-auto w-100">
+         <div className="flex-center mb-8" style={{ flexDirection: 'column' }}>
+            <div className="animate-pulse-glow mb-4" style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+               <User size={40} color="#020617" />
+            </div>
+            <h2 className="text-2xl font-mono text-primary">{wallet.address}</h2>
+            <p className="text-muted text-sm mt-2">Active Web3 Player</p>
+         </div>
+
+         <div className="grid-2 gap-4 mb-6">
+            <div className="bg-dark p-4 rounded text-center border" style={{ borderColor: 'var(--glass-border)' }}>
+               <Flame size={24} color="var(--warning)" className="mx-auto mb-2" />
+               <p className="text-xs text-muted font-bold uppercase tracking-wider mb-1">Win Streak</p>
+               <p className="text-2xl font-bold font-mono" style={{ color: 'white' }}>{winStreak}</p>
+            </div>
+            <div className="bg-dark p-4 rounded text-center border" style={{ borderColor: 'var(--glass-border)' }}>
+               <Coins size={24} color="#14F195" className="mx-auto mb-2" />
+               <p className="text-xs text-muted font-bold uppercase tracking-wider mb-1">SKR Balance</p>
+               <p className="text-2xl font-bold font-mono" style={{ color: '#14F195' }}>{totalSkr}</p>
+            </div>
+         </div>
+
+         <div className="grid-2 gap-4">
+            <div className="bg-dark p-4 rounded text-center border" style={{ borderColor: 'var(--glass-border)' }}>
+               <Swords size={24} color="var(--secondary)" className="mx-auto mb-2" />
+               <p className="text-xs text-muted font-bold uppercase tracking-wider mb-1">Arena Wins</p>
+               <p className="text-2xl font-bold font-mono" style={{ color: 'white' }}>{battleWins}</p>
+            </div>
+            <div className="bg-dark p-4 rounded text-center border" style={{ borderColor: 'var(--glass-border)' }}>
+               <BrainCircuit size={24} color="var(--primary)" className="mx-auto mb-2" />
+               <p className="text-xs text-muted font-bold uppercase tracking-wider mb-1">Trivia Wins</p>
+               <p className="text-2xl font-bold font-mono" style={{ color: 'white' }}>{quizWins}</p>
+            </div>
+         </div>
+         
+         <div className="mt-6 text-center">
+            <p className="text-muted text-sm mb-2">Total Accumulated Lifetime Output</p>
+            <h3 className="text-xl text-gradient font-bold">{totalXp.toLocaleString()} XP</h3>
+         </div>
+      </div>
+    </div>
+  );
+}
+
 // --- MAIN APP DRIVER ---
 function App() {
   const [wallet, setWallet] = useState(null);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('battle'); // battle, quiz, clans
+  const [activeTab, setActiveTab] = useState('battle'); 
   const [totalXp, setTotalXp] = useState(150); 
   const [totalSkr, setTotalSkr] = useState(100); 
   const [winStreak, setWinStreak] = useState(0);
   const [hasJoinedClan, setHasJoinedClan] = useState(false);
+  const [quizWins, setQuizWins] = useState(0);
+  const [battleWins, setBattleWins] = useState(0);
 
   const handleConnect = (name, address) => { setWallet({ name, address }); setWalletModalOpen(false); };
 
-  const handleMatchEnd = (xpReward, skrYield, matchType, isWin) => {
+  const handleMatchEnd = (xpReward, skrYield, matchType, isWin, moduleName) => {
     if (isWin) {
        setWinStreak(prev => prev + 1);
+       if (moduleName === 'arena') setBattleWins(prev => prev + 1);
+       if (moduleName === 'quiz') setQuizWins(prev => prev + 1);
        if (winStreak >= 2) { xpReward = Math.floor(xpReward * 1.5); skrYield = Math.floor(skrYield * 1.5); }
     } else { setWinStreak(0); }
 
@@ -720,6 +777,9 @@ function App() {
           <button className={`btn ${activeTab === 'leaderboard' ? '' : 'btn-secondary'}`} style={{ padding: '10px 24px', border: 'none', background: activeTab === 'leaderboard' ? '' : 'transparent', boxShadow: 'none' }} onClick={() => setActiveTab('leaderboard')}>
             <Trophy size={20} /> <span className="hide-mobile font-bold" style={{ marginLeft: '8px' }}>Rank</span>
           </button>
+          <button className={`btn ${activeTab === 'profile' ? '' : 'btn-secondary'}`} style={{ padding: '10px 24px', border: 'none', background: activeTab === 'profile' ? '' : 'transparent', boxShadow: 'none' }} onClick={() => setActiveTab('profile')}>
+            <User size={20} /> <span className="hide-mobile font-bold" style={{ marginLeft: '8px' }}>Profile</span>
+          </button>
         </div>
 
         <div className="flex-center gap-6">
@@ -742,6 +802,7 @@ function App() {
         {activeTab === 'quiz' && <QuizGame onMatchEnd={handleMatchEnd} wallet={wallet} totalSkr={totalSkr} requestConnect={() => setWalletModalOpen(true)} />}
         {activeTab === 'clans' && <ClansTab wallet={wallet} winStreak={winStreak} hasJoinedClan={hasJoinedClan} onJoin={() => setHasJoinedClan(true)} />}
         {activeTab === 'leaderboard' && <LeaderboardTab wallet={wallet} totalXp={totalXp} />}
+        {activeTab === 'profile' && <ProfileTab wallet={wallet} winStreak={winStreak} totalSkr={totalSkr} totalXp={totalXp} quizWins={quizWins} battleWins={battleWins} />}
       </div>
     </div>
   );
