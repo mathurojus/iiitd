@@ -21,6 +21,43 @@ const CARDS = [
   { id: 'spell', name: 'Rug Pull', cost: 3, type: 'spell', instantDmg: 150, color: '#9945FF', component: <Zap size={28} color="#9945FF" /> }
 ];
 
+// --- CYBERCORE ANIMATED BACKGROUND ---
+const CybercoreBackground = ({ beamCount = 60 }) => {
+  const [beams, setBeams] = useState([]);
+
+  useEffect(() => {
+    const generated = Array.from({ length: beamCount }).map((_, i) => {
+      const riseDur = Math.random() * 8 + 6; 
+      const fadeDur = riseDur;             
+      const type = Math.random() < 0.2 ? 'secondary' : 'primary';
+      return {
+        id: i,
+        type,
+        style: {
+          left: `${Math.random() * 100}%`,
+          width: `${Math.floor(Math.random() * 3) + 1}px`,
+          animationDelay: `${Math.random() * 10}s`,
+          animationDuration: `${riseDur}s, ${fadeDur}s`,
+        },
+      };
+    });
+    setBeams(generated);
+  }, [beamCount]);
+
+  return (
+    <div className="cybercore-scene" aria-hidden="true">
+      <div className="cybercore-floor" />
+      <div className="cybercore-main-column" />
+      <div className="cybercore-light-stream-container">
+        {beams.map((beam) => (
+          <div key={beam.id} className={`cybercore-light-beam ${beam.type}`} style={beam.style} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
 // --- WALLET MODAL ---
 function WalletModal({ isOpen, onClose, onConnect }) {
   const [connectingTo, setConnectingTo] = useState(null);
@@ -483,7 +520,32 @@ function StandaloneUIRedirects({ module, gameState, matchType, setGameState, sta
 }
 
 // --- CLANS (Social System) ---
-function ClansTab({ wallet, winStreak }) {
+function ClansTab({ wallet, winStreak, hasJoinedClan, onJoin }) {
+  if (wallet && !hasJoinedClan) return (
+    <div className="container section fade-in-up">
+      <h1 className="text-4xl mb-4 text-center text-gradient uppercase font-bold tracking-wider">Join a Faction</h1>
+      <p className="text-center text-muted mb-8 max-w-lg mx-auto" style={{ lineHeight: '1.6' }}>Clan Wars operate on weekly EPOCH cycles. Join a faction to pool your PvP Win Streaks and earn massive SKR distributions.</p>
+      
+      <div className="grid-2 max-w-lg mx-auto" style={{ gap: '24px' }}>
+         <div className="clan-board p-8 text-center" style={{ border: '2px solid rgba(20,241,149,0.3)', boxShadow: '0 10px 40px rgba(20,241,149,0.1)' }}>
+            <Shield size={64} color="var(--primary)" className="mx-auto mb-4" />
+            <h2 className="text-2xl mb-2 font-bold">Solana Degens</h2>
+            <p className="text-muted text-sm mb-6">Rank: #4 • Members: 42/50</p>
+            <button className="btn btn-large w-100 py-3" style={{ fontSize: '1rem', padding: '16px' }} onClick={onJoin}>
+               Join Faction
+            </button>
+         </div>
+         <div className="clan-board p-8 text-center" style={{ opacity: 0.5, filter: 'grayscale(1)' }}>
+            <Server size={64} color="var(--text-muted)" className="mx-auto mb-4" />
+            <h2 className="text-2xl mb-2 font-bold">ETH Maxis</h2>
+            <p className="text-muted text-sm mb-6">Rank: #1 • Members: 50/50</p>
+            <button className="btn w-100 py-3 disabled" style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+               Clan Full
+            </button>
+         </div>
+      </div>
+    </div>
+  );
   if (!wallet) return (
      <div className="container section text-center fade-in" style={{ paddingTop: '100px' }}><Users size={80} className="mx-auto mb-6 text-muted" /><h2 className="text-4xl mb-4">Connect to join a Clan.</h2><p className="text-muted text-xl mb-6">Link your mock wallet to view the Social Wars.</p></div>
   );
@@ -545,6 +607,64 @@ function ClansTab({ wallet, winStreak }) {
   );
 }
 
+// --- GLOBAL LEADERBOARD ---
+const MOCK_LEADERBOARD = [
+  { rank: 1, address: '0xSolKing...8X', xp: 14500, clan: 'Solana Degens' },
+  { rank: 2, address: '0xWhale...99Z', xp: 12200, clan: 'Solana Degens' },
+  { rank: 3, address: '0xAlpha...44X', xp: 8900, clan: 'Solana Degens' },
+  { rank: 4, address: '0xEthMaxi...1A', xp: 8100, clan: 'ETH Maxis' },
+  { rank: 5, address: '0xDegen...12A', xp: 7500, clan: 'Solana Degens' },
+  { rank: 6, address: '0xTrader...7B', xp: 6200, clan: 'Independent' },
+  { rank: 7, address: '0xSniper...9C', xp: 5400, clan: 'Independent' },
+  { rank: 8, address: '0xNoob...2D', xp: 4800, clan: 'ETH Maxis' },
+  { rank: 9, address: '0xBot...3E', xp: 3500, clan: 'Independent' },
+];
+
+function LeaderboardTab({ wallet, totalXp }) {
+  const playerEntry = {
+     isPlayer: true,
+     address: wallet ? `${wallet.address.substring(0,8)}... (YOU)` : 'Guest Player (YOU)',
+     xp: totalXp,
+     clan: 'Solana Degens'
+  };
+
+  const fullBoard = [...MOCK_LEADERBOARD, playerEntry].sort((a,b) => b.xp - a.xp);
+  fullBoard.forEach((entry, idx) => entry.rank = idx + 1);
+
+  return (
+    <div className="container section fade-in-up">
+      <h1 className="text-4xl mb-8 text-center text-gradient uppercase font-bold tracking-wider">Global Rankings</h1>
+      <div className="glass-panel w-100 max-w-lg mx-auto overflow-hidden">
+         <div className="flex-between p-4 text-muted text-sm font-bold uppercase tracking-wider" style={{ borderBottom: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.3)' }}>
+            <div style={{flex: 1}}>Rank</div>
+            <div style={{flex: 3}}>Player</div>
+            <div style={{flex: 2, textAlign: 'right'}}>Total XP</div>
+         </div>
+         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {fullBoard.slice(0, 10).map((p, idx) => (
+               <li key={idx} className="flex-between p-4" style={{ 
+                  background: p.isPlayer ? 'linear-gradient(90deg, rgba(20,241,149,0.1) 0%, transparent 100%)' : 'transparent',
+                  borderLeft: p.isPlayer ? '4px solid var(--primary)' : '4px solid transparent',
+                  borderBottom: '1px solid rgba(255,255,255,0.02)',
+                  transition: 'background 0.2s'
+               }}>
+                  <div style={{flex: 1, color: idx < 3 ? 'var(--warning)' : 'var(--text-muted)', fontWeight: 'bold' }}>
+                     {idx === 0 ? '🏆 1' : idx === 1 ? '🥈 2' : idx === 2 ? '🥉 3' : `#${p.rank}`}
+                  </div>
+                  <div style={{flex: 3, fontFamily: 'monospace', color: p.isPlayer ? 'var(--text-main)' : 'var(--text-muted)' }}>
+                     {p.address}
+                  </div>
+                  <div style={{flex: 2, textAlign: 'right', fontWeight: 'bold', color: 'var(--primary)'}}>
+                     {p.xp.toLocaleString()} XP
+                  </div>
+               </li>
+            ))}
+         </ul>
+      </div>
+    </div>
+  )
+}
+
 // --- MAIN APP DRIVER ---
 function App() {
   const [wallet, setWallet] = useState(null);
@@ -553,6 +673,7 @@ function App() {
   const [totalXp, setTotalXp] = useState(150); 
   const [totalSkr, setTotalSkr] = useState(100); 
   const [winStreak, setWinStreak] = useState(0);
+  const [hasJoinedClan, setHasJoinedClan] = useState(false);
 
   const handleConnect = (name, address) => { setWallet({ name, address }); setWalletModalOpen(false); };
 
@@ -576,9 +697,11 @@ function App() {
 
   return (
     <div>
+      <CybercoreBackground beamCount={50} />
+
       <WalletModal isOpen={walletModalOpen} onClose={() => setWalletModalOpen(false)} onConnect={handleConnect} />
 
-      <nav className="container flex-between" style={{ padding: '24px 20px', borderBottom: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', position: 'sticky', top: 0, zIndex: 100 }}>
+      <nav className="container flex-between" style={{ padding: '24px 20px', borderBottom: '1px solid var(--glass-border)', background: 'rgba(11, 14, 20, 0.8)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 100 }}>
         <div className="flex-center cursor-pointer" style={{ gap: '16px' }}>
           <Gamepad2 size={32} color="var(--primary)" className="animate-pulse-glow" style={{ borderRadius: '50%' }} />
           <span className="font-bold tracking-wider hide-mobile text-xl">CLASH<span className="text-gradient">GO</span></span>
@@ -594,13 +717,16 @@ function App() {
           <button className={`btn ${activeTab === 'clans' ? '' : 'btn-secondary'}`} style={{ padding: '10px 24px', border: 'none', background: activeTab === 'clans' ? '' : 'transparent', boxShadow: 'none' }} onClick={() => setActiveTab('clans')}>
             <Users size={20} /> <span className="hide-mobile font-bold" style={{ marginLeft: '8px' }}>Clans</span>
           </button>
+          <button className={`btn ${activeTab === 'leaderboard' ? '' : 'btn-secondary'}`} style={{ padding: '10px 24px', border: 'none', background: activeTab === 'leaderboard' ? '' : 'transparent', boxShadow: 'none' }} onClick={() => setActiveTab('leaderboard')}>
+            <Trophy size={20} /> <span className="hide-mobile font-bold" style={{ marginLeft: '8px' }}>Rank</span>
+          </button>
         </div>
 
         <div className="flex-center gap-6">
           {wallet && (
              <div className="font-mono flex-center hide-mobile text-lg" style={{ gap: '16px' }}>
                 <span className={winStreak >= 3 ? 'fire-streak font-bold text-xl' : 'text-muted font-bold'}>🔥 {winStreak}</span>
-                <span className="font-bold" style={{ color: '#FFA500', background: 'rgba(255,165,0,0.1)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(255,165,0,0.3)' }}>{totalSkr} SKR</span>
+                <span className="font-bold" style={{ color: '#14F195', background: 'rgba(20,241,149,0.1)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(20,241,149,0.3)' }}>{totalSkr} SKR</span>
              </div>
           )}
           <button className="btn btn-secondary hide-mobile" style={{ padding: '12px 24px' }} onClick={() => wallet ? setWallet(null) : setWalletModalOpen(true)}>
@@ -611,10 +737,11 @@ function App() {
 
       <style>{`@media (max-width: 768px) { .hide-mobile { display: none !important; } }`}</style>
 
-      <div style={{ minHeight: 'calc(100vh - 90px)' }}>
+      <div style={{ minHeight: 'calc(100vh - 90px)', position: 'relative', zIndex: 10 }}>
         {activeTab === 'battle' && <ClashArena onMatchEnd={handleMatchEnd} wallet={wallet} totalSkr={totalSkr} requestConnect={() => setWalletModalOpen(true)} />}
         {activeTab === 'quiz' && <QuizGame onMatchEnd={handleMatchEnd} wallet={wallet} totalSkr={totalSkr} requestConnect={() => setWalletModalOpen(true)} />}
-        {activeTab === 'clans' && <ClansTab wallet={wallet} winStreak={winStreak} />}
+        {activeTab === 'clans' && <ClansTab wallet={wallet} winStreak={winStreak} hasJoinedClan={hasJoinedClan} onJoin={() => setHasJoinedClan(true)} />}
+        {activeTab === 'leaderboard' && <LeaderboardTab wallet={wallet} totalXp={totalXp} />}
       </div>
     </div>
   );
