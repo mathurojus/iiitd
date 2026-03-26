@@ -60,6 +60,116 @@ const CybercoreBackground = ({ beamCount = 60 }) => {
 
 
 
+// --- CONVERGENCE TAB (DEFI HUB) ---
+function ConvergenceTab({ otherBalances, onSwap }) {
+  const [swapAsset, setSwapAsset] = useState(null);
+  const [swapAmount, setSwapAmount] = useState('');
+  const [isSwapping, setIsSwapping] = useState(false);
+
+  const RATES = { ETH: 2500, USDT: 1, USDC: 1, SOL: 150 };
+
+  const handleConverge = () => {
+    if (!swapAsset || !swapAmount || isNaN(swapAmount) || swapAmount <= 0) return;
+    if (parseFloat(swapAmount) > otherBalances[swapAsset]) { alert("Insufficient Balance!"); return; }
+    
+    setIsSwapping(true);
+    setTimeout(() => {
+      const skrGain = parseFloat(swapAmount) * RATES[swapAsset];
+      onSwap(swapAsset, parseFloat(swapAmount), skrGain);
+      setIsSwapping(false);
+      setSwapAsset(null);
+      setSwapAmount('');
+    }, 2000);
+  };
+
+  return (
+    <div className="container section fade-in-up">
+      <h1 className="text-4xl mb-4 text-center text-gradient uppercase font-bold tracking-wider">Multi-Token Convergence</h1>
+      <p className="text-center text-muted mb-8 max-w-lg mx-auto">Bridge external assets into $SKR tokens for high-stakes gameplay.</p>
+
+      <div className="grid-2 gap-8 max-w-4xl mx-auto align-items-start">
+        {/* Left Side: Asset Inventory */}
+        <div className="glass-panel p-6">
+          <h2 className="text-xl mb-6 font-bold uppercase tracking-widest flex-center" style={{justifyContent: 'flex-start'}}><Wallet size={20} className="mr-2 text-primary" style={{marginRight:'8px'}}/> Current Inventory</h2>
+          <div className="grid-1 gap-4">
+            {Object.keys(otherBalances).map(asset => (
+              <div key={asset} 
+                className={`bg-dark p-4 rounded border cursor-pointer transition flex-between ${swapAsset === asset ? 'border-primary' : ''}`}
+                style={{ borderColor: swapAsset === asset ? 'var(--primary)' : 'rgba(255,255,255,0.05)', background: swapAsset === asset ? 'rgba(20,241,149,0.05)' : 'rgba(0,0,0,0.3)' }}
+                onClick={() => setSwapAsset(asset)}>
+                <div className="flex-center">
+                   <div className="bg-dark rounded-full p-2 mr-4 border" style={{width:'40px', height:'40px', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                      <span className="font-bold text-xs">{asset[0]}</span>
+                   </div>
+                   <div>
+                      <p className="font-bold leading-tight">{asset}</p>
+                      <p className="text-muted text-xs uppercase">Liquidity Tier 1</p>
+                   </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xl font-mono font-bold">{otherBalances[asset]}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Side: Swap Station */}
+        <div className="glass-panel p-8" style={{ position: 'relative', minHeight: '400px' }}>
+          {swapAsset ? (
+            <div className="fade-in">
+              <h2 className="text-2xl mb-6 font-bold uppercase tracking-widest">Execute Swap</h2>
+              
+              <div className="bg-dark p-6 rounded border mb-6" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                <div className="flex-between mb-4">
+                  <span className="text-muted text-xs font-bold uppercase tracking-wider">Converge {swapAsset}</span>
+                  <span className="text-primary text-xs font-bold uppercase font-mono">Rate: 1:{RATES[swapAsset]} SKR</span>
+                </div>
+                <input 
+                  type="number" 
+                  className="w-100 bg-transparent text-4xl font-mono text-white outline-none border-none" 
+                  placeholder="0.00"
+                  value={swapAmount}
+                  onChange={(e) => setSwapAmount(e.target.value)}
+                />
+              </div>
+
+              <div className="flex-center mb-6" style={{flexDirection:'column'}}>
+                <Zap size={32} className="text-muted mb-2 animate-pulse" />
+                <p className="text-sm text-muted uppercase font-bold tracking-widest mb-1">Estimated Output</p>
+                <p className="text-4xl font-bold text-gradient">
+                  {swapAmount ? (parseFloat(swapAmount) * RATES[swapAsset]).toLocaleString() : 0} SKR
+                </p>
+              </div>
+
+              <button 
+                className={`btn w-100 py-4 font-bold uppercase text-lg ${isSwapping ? 'disabled' : ''}`} 
+                onClick={handleConverge}
+                disabled={isSwapping}>
+                {isSwapping ? 'Tuning Liquidity...' : 'Finalize Convergence'}
+              </button>
+            </div>
+          ) : (
+            <div className="flex-center h-100" style={{flexDirection:'column', paddingTop:'60px'}}>
+               <Shield size={64} className="text-muted mb-4 opacity-20" />
+               <p className="text-muted font-mono uppercase text-xs tracking-widest text-center">Identity Secured • Select an asset to begin high-speed throughput</p>
+            </div>
+          )}
+
+          {isSwapping && (
+             <div className="flex-center" style={{ position: 'absolute', inset: 0, background: 'rgba(2, 6, 23, 0.8)', backdropFilter: 'blur(8px)', zIndex: 10 }}>
+                <div className="text-center">
+                   <div className="spin-slow mb-6 mx-auto" style={{ width: '64px', height: '64px', border: '4px dashed var(--primary)', borderRadius: '50%' }}></div>
+                   <p className="text-2xl font-mono text-gradient uppercase font-bold">Converging Assets...</p>
+                </div>
+             </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- WALLET MODAL ---
 function WalletModal({ isOpen, onClose, onConnect }) {
   const [connectingTo, setConnectingTo] = useState(null);
@@ -75,16 +185,20 @@ function WalletModal({ isOpen, onClose, onConnect }) {
           <div className="flex-center fade-in" style={{ flexDirection: 'column', padding: '40px 0' }}>
             <div className="spin-slow mb-6" style={{ width: '64px', height: '64px', border: '4px dashed var(--primary)', borderRadius: '50%' }}></div>
             <h3 className="mb-2 text-xl">Connecting to {connectingTo}...</h3>
-            <p className="text-muted text-sm line-height-relaxed">Please open your wallet extension to approve.</p>
+            <p className="text-muted text-sm line-height-relaxed text-center">Please open your wallet extension to approve.</p>
           </div>
         ) : (
           <div className="fade-in">
-            <h2 className="mb-6 text-gradient text-3xl">Connect Wallet</h2>
+            <h2 className="mb-6 text-gradient text-3xl uppercase font-bold tracking-wider">Connect Wallet</h2>
             <div className="wallet-options">
-              <button className="btn btn-wallet" onClick={() => handleProviderClick("Phantom", "0xPhan...tom89A")}><img src="https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Solana_logo.png/120px-Solana_logo.png" alt="Phantom" className="wallet-icon" style={{ filter: "grayscale(1) brightness(2)" }} />Phantom Mode</button>
-              <button className="btn btn-wallet" onClick={() => handleProviderClick("Solflare", "0xSolf...lare2B")}><img src="https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Solana_logo.png/120px-Solana_logo.png" alt="Solflare" className="wallet-icon" style={{ filter: "grayscale(1) brightness(2)" }} />Solflare Mode</button>
+               <button className="btn btn-wallet w-100 mb-3" onClick={() => handleProviderClick("Phantom", "0xPhan...tom89A")}>
+                  <img src="https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Solana_logo.png/120px-Solana_logo.png" alt="Phantom" className="wallet-icon" /> Phantom Node
+                </button>
+                <button className="btn btn-wallet w-100" onClick={() => handleProviderClick("Solflare", "0xSolf...lare2B")}>
+                  <img src="https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Solana_logo.png/120px-Solana_logo.png" alt="Solflare" className="wallet-icon" /> Solflare Node
+                </button>
             </div>
-            <button className="btn-secondary mt-6 w-100 py-4" onClick={onClose}>Cancel</button>
+            <button className="btn-secondary mt-6 w-100 py-4 font-bold uppercase" onClick={onClose} style={{border: 'none', background: 'rgba(255,255,255,0.05)'}}>Close Hub</button>
           </div>
         )}
       </div>
@@ -850,8 +964,19 @@ function App() {
   const [hasJoinedClan, setHasJoinedClan] = useState(false);
   const [quizWins, setQuizWins] = useState(0);
   const [battleWins, setBattleWins] = useState(0);
+  const [otherBalances, setOtherBalances] = useState({
+    ETH: 0.5,
+    USDT: 500,
+    USDC: 250,
+    SOL: 12.5
+  });
 
   const handleConnect = (name, address) => { setWallet({ name, address }); setWalletModalOpen(false); };
+
+  const handleSwap = (asset, amount, skrGain) => {
+    setOtherBalances(prev => ({ ...prev, [asset]: prev[asset] - amount }));
+    setTotalSkr(prev => prev + skrGain);
+  };
 
   const handleMatchEnd = (xpReward, skrYield, matchType, isWin, moduleName) => {
     if (isWin) {
@@ -893,6 +1018,9 @@ function App() {
           <button className={`btn ${activeTab === 'market' ? '' : 'btn-secondary'}`} style={{ padding: '10px 24px', border: 'none', background: activeTab === 'market' ? '' : 'transparent', boxShadow: 'none' }} onClick={() => setActiveTab('market')}>
             <TrendingUp size={20} /> <span className="hide-mobile font-bold" style={{ marginLeft: '8px' }}>Market</span>
           </button>
+          <button className={`btn ${activeTab === 'convergence' ? '' : 'btn-secondary'}`} style={{ padding: '10px 24px', border: 'none', background: activeTab === 'convergence' ? '' : 'transparent', boxShadow: 'none' }} onClick={() => setActiveTab('convergence')}>
+            <Zap size={20} /> <span className="hide-mobile font-bold" style={{ marginLeft: '8px' }}>Liquidity</span>
+          </button>
 
           <button className={`btn ${activeTab === 'clans' ? '' : 'btn-secondary'}`} style={{ padding: '10px 24px', border: 'none', background: activeTab === 'clans' ? '' : 'transparent', boxShadow: 'none' }} onClick={() => setActiveTab('clans')}>
             <Users size={20} /> <span className="hide-mobile font-bold" style={{ marginLeft: '8px' }}>Clans</span>
@@ -906,12 +1034,10 @@ function App() {
         </div>
 
         <div className="flex-center gap-6">
-          {wallet && (
-            <div className="font-mono flex-center hide-mobile text-lg" style={{ gap: '16px' }}>
-              <span className={winStreak >= 3 ? 'fire-streak font-bold text-xl' : 'text-muted font-bold'}>🔥 {winStreak}</span>
-              <span className="font-bold" style={{ color: '#14F195', background: 'rgba(20,241,149,0.1)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(20,241,149,0.3)' }}>{totalSkr} SKR</span>
-            </div>
-          )}
+          <div className="font-mono flex-center hide-mobile text-lg" style={{ gap: '16px' }}>
+            <span className={winStreak >= 3 ? 'fire-streak font-bold text-xl' : 'text-muted font-bold'}>🔥 {winStreak}</span>
+            <span className="font-bold" style={{ color: '#14F195', background: 'rgba(20,241,149,0.1)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(20,241,149,0.3)' }}>{totalSkr} SKR</span>
+          </div>
           <button className="btn btn-secondary hide-mobile" style={{ padding: '12px 24px' }} onClick={() => wallet ? setWallet(null) : setWalletModalOpen(true)}>
             <Wallet size={18} /> {wallet ? <span className="text-primary font-bold font-mono">{wallet.address.substring(0, 4)}..</span> : 'Connect'}
           </button>
@@ -924,12 +1050,17 @@ function App() {
         {activeTab === 'battle' && <ClashArena onMatchEnd={handleMatchEnd} wallet={wallet} totalSkr={totalSkr} requestConnect={() => setWalletModalOpen(true)} />}
         {activeTab === 'quiz' && <QuizGame onMatchEnd={handleMatchEnd} wallet={wallet} totalSkr={totalSkr} requestConnect={() => setWalletModalOpen(true)} />}
         {activeTab === 'market' && <MarketPredictionTab />}
+        {activeTab === 'convergence' && <ConvergenceTab otherBalances={otherBalances} onSwap={handleSwap} />}
         {activeTab === 'clans' && <ClansTab wallet={wallet} winStreak={winStreak} hasJoinedClan={hasJoinedClan} onJoin={() => setHasJoinedClan(true)} />}
         {activeTab === 'leaderboard' && <LeaderboardTab wallet={wallet} totalXp={totalXp} />}
         {activeTab === 'profile' && <ProfileTab wallet={wallet} winStreak={winStreak} totalSkr={totalSkr} totalXp={totalXp} quizWins={quizWins} battleWins={battleWins} />}
       </div>
 
-      <WalletModal isOpen={walletModalOpen} onClose={() => setWalletModalOpen(false)} onConnect={handleConnect} />
+      <WalletModal 
+        isOpen={walletModalOpen} 
+        onClose={() => setWalletModalOpen(false)} 
+        onConnect={handleConnect} 
+      />
     </div>
   );
 }
