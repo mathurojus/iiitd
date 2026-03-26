@@ -63,3 +63,6 @@ Here's a look at ClashGo's gameplay and features:
 ![Clash Arena Main Screen](./Screenshot%202026-03-26%20065945.png)
 
 ![Game Results Interface](./Screenshot%202026-03-26%20070013.png)
+
+### Market Intelligence
+![Market Intelligence - SOL Momentum Analysis](./Screenshot%202026-03-26%20073943.png)
