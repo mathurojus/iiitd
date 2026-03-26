@@ -65,3 +65,9 @@ Here's a look at ClashGo's gameplay and features:
 
 ### Arena Main Page
 ![Arena Main Interface](./Screenshot%202026-03-26%20065815.png)
+
+### Clash Arena Match
+![Clash Arena Main Screen](./Screenshot%202026-03-26%20065945.png)
+
+### Game Result Screen
+![Game Results Interface](./Screenshot%202026-03-26%20070013.png)
